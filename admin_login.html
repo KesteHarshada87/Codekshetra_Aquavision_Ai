@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Login</title>
+<link rel="stylesheet" href="style.css">
+
+<script>
+
+function validateLogin(){
+
+var username = document.getElementById("username").value;
+var password = document.getElementById("password").value;
+
+if(username=="" || password==""){
+alert("Please enter Username and Password");
+return false;
+}
+
+else{
+alert("Login Successful");
+}
+
+}
+
+</script>
+
+</head>
+
+<body class="login-page">
+
+<div class="login-container">
+
+<h2>Admin Login</h2>
+<br>
+
+<input type="text" id="username" placeholder="Username"><br><br>
+
+<input type="password" id="password" placeholder="Password"><br><br>
+
+<button class="btn" onclick="validateLogin()">Login</button>
+
+</div>
+
+</body>
+</html>

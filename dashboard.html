@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>AquaVision AI</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:linear-gradient(135deg,#4e73df,#1cc88a);
+color:white;
+text-align:center;
+padding:20px;
+}
+
+.card{
+background:white;
+color:black;
+padding:25px;
+border-radius:15px;
+width:500px;
+margin:auto;
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+
+input{
+width:80%;
+padding:10px;
+margin:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:10px 20px;
+background:#4e73df;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+#chatBox{
+height:250px;
+overflow-y:auto;
+border:1px solid #ccc;
+padding:10px;
+border-radius:8px;
+background:#f8f9fc;
+color:black;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🌾 AquaVision AI</h1>
+
+<div class="card">
+
+<h2>Groundwater Forecast</h2>
+
+<input type="text" id="station" placeholder="Enter Station Name">
+
+<br>
+
+<button onclick="predict()">Get Forecast</button>
+
+<button onclick="useLocation()">📍 Use My Location</button>
+
+<h3 id="stationName"></h3>
+<h3 id="risk"></h3>
+<h4 id="avg"></h4>
+<h4 id="crops"></h4>
+
+<canvas id="forecastChart"></canvas>
+
+</div>
+
+
+<br><br>
+
+<div class="card">
+
+<h2>AI Farmer Assistant</h2>
+
+<div id="chatBox"></div>
+
+<input type="text" id="chatInput">
+
+<button onclick="sendMessage()">Send</button>
+
+</div>
+
+
+<script>
+
+let chart;
+
+// manual forecast
+async function predict(){
+
+let station=document.getElementById("station").value;
+
+let res=await fetch(`/predict6/${station}`,{method:"POST"});
+
+let data=await res.json();
+
+if(data.error){
+alert(data.error);
+return;
+}
+
+showForecast(data);
+
+}
+
+
+// show forecast
+function showForecast(data){
+
+document.getElementById("stationName").innerHTML=
+"Nearest Station: "+data.station;
+
+document.getElementById("risk").innerHTML=
+"Risk Level: "+data.risk_level;
+
+document.getElementById("avg").innerHTML=
+"Average Water Level: "+data.average_water_level;
+
+document.getElementById("crops").innerHTML=
+"Recommended Crops: "+data.recommended_crops.join(", ");
+
+let ctx=document.getElementById("forecastChart");
+
+if(chart) chart.destroy();
+
+chart=new Chart(ctx,{
+type:'line',
+data:{
+labels:["Month1","Month2","Month3","Month4","Month5","Month6"],
+datasets:[{
+label:'Water Level Forecast',
+data:data.forecast,
+borderColor:'blue',
+fill:false
+}]
+}
+});
+
+}
+
+
+// location forecast
+function useLocation(){
+
+navigator.geolocation.getCurrentPosition(async function(position){
+
+let lat=position.coords.latitude;
+let lon=position.coords.longitude;
+
+let res=await fetch(`/predict_by_location`,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+latitude:lat,
+longitude:lon
+})
+
+});
+
+let data=await res.json();
+
+if(data.error){
+alert(data.error);
+return;
+}
+
+document.getElementById("station").value=data.station;
+
+showForecast(data);
+
+});
+
+}
+
+
+// chatbot
+async function sendMessage(){
+
+let message=document.getElementById("chatInput").value;
+
+if(message=="") return;
+
+let chatBox=document.getElementById("chatBox");
+
+chatBox.innerHTML+="<p><b>You:</b> "+message+"</p>";
+
+let res=await fetch(`/chat?message=${encodeURIComponent(message)}`,{
+method:"POST"
+});
+
+let data=await res.json();
+
+chatBox.innerHTML+="<p><b>AI:</b> "+data.response+"</p>";
+
+chatBox.scrollTop=chatBox.scrollHeight;
+
+document.getElementById("chatInput").value="";
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Login</title>
+<link rel="stylesheet" href="style.css">
+
+<script>
+
+// switch forms
+
+function showSignUp(){
+document.getElementById("signupForm").style.display="block";
+document.getElementById("signinForm").style.display="none";
+}
+
+function showSignIn(){
+document.getElementById("signinForm").style.display="block";
+document.getElementById("signupForm").style.display="none";
+}
+
+
+// SIGN IN VALIDATION
+function validateSignIn(){
+
+var name=document.getElementById("signinName").value;
+var password=document.getElementById("signinPassword").value;
+
+if(name=="" || password==""){
+alert("Please enter Name and Password");
+return;
+}
+
+alert("Login Successful");
+
+// redirect to dashboard
+window.location.href="index.html";
+
+}
+
+function validateSignUp(){
+
+var name=document.getElementById("signupName").value;
+var phone=document.getElementById("signupPhone").value;
+var password=document.getElementById("signupPassword").value;
+
+if(name=="" || phone=="" || password==""){
+alert("Please fill all fields to register");
+return;
+}
+
+alert("Registration Successful");
+
+// redirect to dashboard
+window.location.href="index.html";
+
+}
+
+</script>
+
+<style>
+
+.user-buttons{
+display:flex;
+gap:20px;
+justify-content:center;
+margin-bottom:30px;
+}
+
+.form-box{
+background:rgba(255,255,255,0.08);
+padding:30px;
+border-radius:10px;
+width:300px;
+margin:auto;
+backdrop-filter:blur(10px);
+}
+
+.form-box input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:5px;
+border:none;
+}
+
+</style>
+
+</head>
+
+<body class="login-page">
+
+<div class="login-container">
+
+<h2>User Access</h2>
+
+<!-- Buttons -->
+
+<div class="user-buttons">
+
+<button class="btn big" onclick="showSignIn()">Sign In</button>
+
+<button class="btn-outline big" onclick="showSignUp()">Sign Up</button>
+
+</div>
+
+
+<!-- SIGN IN FORM -->
+
+<div id="signinForm" class="form-box" style="display:none">
+
+<h3>Sign In</h3>
+
+<input type="text" id="signinName" placeholder="Name">
+<input type="password" id="signinPassword" placeholder="Password">
+
+<button class="btn" onclick="validateSignIn()">Login</button>
+
+</div>
+
+
+<!-- SIGN UP FORM -->
+
+<div id="signupForm" class="form-box" style="display:none">
+
+<h3>Sign Up</h3>
+
+<input type="text" id="signupName" placeholder="Name">
+<input type="text" id="signupPhone" placeholder="Phone Number">
+<input type="password" id="signupPassword" placeholder="Password">
+
+<button class="btn" onclick="validateSignUp()">Register</button>
+
+</div>
+
+</div>
+
+</body>
+</html>

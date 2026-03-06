@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>AquaVision AI Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family: Arial;
+margin:0;
+background:#f4f6fb;
+}
+
+.header{
+background:linear-gradient(90deg,#4e73df,#1cc88a);
+color:white;
+padding:25px;
+text-align:center;
+}
+
+.container{
+width:95%;
+margin:auto;
+margin-top:20px;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.card h2{
+margin:5px;
+color:#4e73df;
+}
+
+.charts{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:25px;
+margin-bottom:30px;
+}
+
+.chart-box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.table-box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
+
+th{
+background:#4e73df;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>AquaVision AI Groundwater Dashboard</h1>
+<p>Insights from clean_dwlr Dataset</p>
+
+</div>
+
+<div class="container">
+
+<!-- SUMMARY CARDS -->
+
+<div class="cards">
+
+<div class="card">
+<h4>Total States</h4>
+<h2 id="states"></h2>
+</div>
+
+<div class="card">
+<h4>Total Stations</h4>
+<h2 id="stations"></h2>
+</div>
+
+<div class="card">
+<h4>Average Water Level</h4>
+<h2 id="avg"></h2>
+</div>
+
+<div class="card">
+<h4>Highest Water Level</h4>
+<h2 id="max"></h2>
+</div>
+
+</div>
+
+
+<!-- CHARTS -->
+
+<div class="charts">
+
+<div class="chart-box">
+<h3>Average Water Level by State</h3>
+<canvas id="stateChart"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Monthly Groundwater Trend</h3>
+<canvas id="monthChart"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Basin Distribution</h3>
+<canvas id="basinChart"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Top 10 Stations</h3>
+<canvas id="stationChart"></canvas>
+</div>
+
+</div>
+
+
+<!-- TABLE -->
+
+<div class="table-box">
+
+<h3>Station Water Level Data</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Station</th>
+<th>State</th>
+<th>District</th>
+<th>Water Level</th>
+</tr>
+</thead>
+
+<tbody id="tableData"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script>
+
+fetch("/data")
+.then(res=>res.json())
+.then(data=>{
+
+let states={}
+let stations={}
+let basins={}
+let months={}
+let levels=[]
+
+data.forEach(r=>{
+
+levels.push(r.currentlevel)
+
+if(!states[r.state_name]) states[r.state_name]=[]
+states[r.state_name].push(r.currentlevel)
+
+if(!stations[r.station_name]) stations[r.station_name]=[]
+stations[r.station_name].push(r.currentlevel)
+
+if(!basins[r.basin]) basins[r.basin]=0
+basins[r.basin]++
+
+let month=r.date.split("-")[1]
+if(!months[month]) months[month]=[]
+months[month].push(r.currentlevel)
+
+})
+
+/* SUMMARY */
+
+document.getElementById("states").innerText=Object.keys(states).length
+document.getElementById("stations").innerText=Object.keys(stations).length
+
+let avg=levels.reduce((a,b)=>a+b)/levels.length
+document.getElementById("avg").innerText=avg.toFixed(2)+" m"
+
+document.getElementById("max").innerText=Math.max(...levels)+" m"
+
+
+/* STATE CHART */
+
+let stateLabels=Object.keys(states).slice(0,10)
+let stateValues=stateLabels.map(s=>{
+let arr=states[s]
+return arr.reduce((a,b)=>a+b)/arr.length
+})
+
+new Chart(stateChart,{
+type:'bar',
+data:{
+labels:stateLabels,
+datasets:[{
+label:'Avg Water Level',
+data:stateValues
+}]
+}
+})
+
+
+/* MONTHLY */
+
+let monthLabels=Object.keys(months)
+
+let monthValues=monthLabels.map(m=>{
+let arr=months[m]
+return arr.reduce((a,b)=>a+b)/arr.length
+})
+
+new Chart(monthChart,{
+type:'line',
+data:{
+labels:monthLabels,
+datasets:[{
+label:'Monthly Level',
+data:monthValues
+}]
+}
+})
+
+
+/* BASIN */
+
+new Chart(basinChart,{
+type:'pie',
+data:{
+labels:Object.keys(basins),
+datasets:[{
+data:Object.values(basins)
+}]
+}
+})
+
+
+/* TOP STATIONS */
+
+let st=Object.keys(stations)
+
+let vals=st.map(s=>{
+let arr=stations[s]
+return arr.reduce((a,b)=>a+b)/arr.length
+})
+
+let pairs=st.map((s,i)=>({s,val:vals[i]}))
+pairs.sort((a,b)=>b.val-a.val)
+
+let top=pairs.slice(0,10)
+
+new Chart(stationChart,{
+type:'bar',
+data:{
+labels:top.map(x=>x.s),
+datasets:[{
+label:'Water Level',
+data:top.map(x=>x.val)
+}]
+}
+})
+
+
+/* TABLE */
+
+let table=document.getElementById("tableData")
+
+data.slice(0,20).forEach(r=>{
+
+table.innerHTML+=`
+<tr>
+<td>${r.station_name}</td>
+<td>${r.state_name}</td>
+<td>${r.district_name}</td>
+<td>${r.currentlevel}</td>
+</tr>
+`
+
+})
+
+})
+
+</script>
+
+</body>
+</html>
