@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AquaVision AI – Loading</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#0ea5e9;
+      --primary-dark:#0369a1;
+      --accent:#22c55e;
+      --bg-deep:#020617;
+      --bg-soft:#0b1120;
+      --text-main:#e5e7eb;
+      --text-muted:#9ca3af;
+    }
+
+    *,
+    *::before,
+    *::after{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Poppins",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at top left,rgba(56,189,248,0.55),transparent 60%),
+        radial-gradient(circle at bottom right,rgba(34,197,94,0.5),transparent 60%),
+        linear-gradient(135deg,#020617,#0b1120);
+      color:var(--text-main);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    .shell{
+      width:100%;
+      max-width:480px;
+      padding:24px 16px;
+    }
+
+    .card{
+      position:relative;
+      padding:32px 22px 26px;
+      border-radius:24px;
+      background:radial-gradient(circle at top left,rgba(148,163,184,0.16),transparent 60%),
+                 rgba(15,23,42,0.96);
+      border:1px solid rgba(148,163,184,0.55);
+      box-shadow:0 26px 70px rgba(15,23,42,0.95);
+      text-align:center;
+      overflow:hidden;
+    }
+
+    .card::before,
+    .card::after{
+      content:"";
+      position:absolute;
+      border-radius:999px;
+      opacity:0.2;
+      filter:blur(0);
+      pointer-events:none;
+      animation:floatBlob 16s linear infinite;
+    }
+
+    .card::before{
+      width:360px;
+      height:360px;
+      background:radial-gradient(circle at 30% 10%,rgba(56,189,248,0.8),transparent 60%);
+      top:-40%;
+      left:-10%;
+    }
+
+    .card::after{
+      width:320px;
+      height:320px;
+      background:radial-gradient(circle at 70% 90%,rgba(34,197,94,0.8),transparent 60%);
+      bottom:-45%;
+      right:-15%;
+      animation-delay:-6s;
+    }
+
+    @keyframes floatBlob{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(6px,-6px,0) scale(1.05);}
+      100%{transform:translate3d(0,0,0) scale(1);}
+    }
+
+    .logo-circle{
+      width:70px;
+      height:70px;
+      border-radius:999px;
+      margin:0 auto 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:32px;
+      background:radial-gradient(circle at 30% 15%,#e0f2fe,transparent 55%),
+                 linear-gradient(135deg,#0ea5e9,#22c55e);
+      box-shadow:0 0 0 4px rgba(59,130,246,0.45),0 24px 40px rgba(8,47,73,0.9);
+    }
+
+    .title{
+      font-size:26px;
+      font-weight:700;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      margin:0 0 6px;
+    }
+
+    .tagline{
+      margin:0 0 18px;
+      font-size:13px;
+      color:var(--text-muted);
+    }
+
+    .pill-row{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:6px;
+      margin-bottom:20px;
+    }
+
+    .pill{
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid rgba(94,234,212,0.6);
+      background:rgba(15,23,42,0.85);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color:#a5f3fc;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+    }
+
+    .pill-dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 0 4px rgba(34,197,94,0.45);
+    }
+
+    .loader-ring{
+      width:54px;
+      height:54px;
+      margin:0 auto 10px;
+      border-radius:999px;
+      border:3px solid rgba(148,163,184,0.35);
+      border-top-color:var(--accent);
+      border-right-color:#38bdf8;
+      animation:spin 1.1s linear infinite;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg);}
+    }
+
+    .loading-text{
+      font-size:11px;
+      color:var(--text-muted);
+      letter-spacing:0.16em;
+      text-transform:uppercase;
+    }
+
+    .progress-bar{
+      margin:14px auto 0;
+      width:140px;
+      height:4px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      overflow:hidden;
+      border:1px solid rgba(30,64,175,0.85);
+    }
+
+    .progress-fill{
+      width:40%;
+      height:100%;
+      background:linear-gradient(90deg,#22c55e,#0ea5e9);
+      animation:progressSlide 1.4s ease-in-out infinite;
+    }
+
+    @keyframes progressSlide{
+      0%{transform:translateX(-60%);}
+      50%{transform:translateX(10%);}
+      100%{transform:translateX(120%);}
+    }
+
+    .hint{
+      margin-top:18px;
+      font-size:10px;
+      color:var(--text-muted);
+    }
+
+    .hint span{
+      color:#a5f3fc;
+    }
+
+    @media (max-width:480px){
+      .card{
+        padding:26px 18px 22px;
+      }
+      .title{
+        font-size:22px;
+        letter-spacing:0.15em;
+      }
+      .tagline{
+        font-size:12px;
+      }
+    }
+  </style>
+
+  <script>
+    // Redirect to main app after short splash
+    setTimeout(function () {
+      window.location.href = "/";
+    }, 2600);
+  </script>
+</head>
+
+<body>
+  <div class="shell">
+    <div class="card">
+      <div class="logo-circle">🌊</div>
+      <h1 class="title">AQUAVISION</h1>
+      <p class="tagline">AI‑powered groundwater forecasting &amp; crop insights.</p>
+
+      <div class="pill-row">
+        <div class="pill">
+          <span class="pill-dot"></span>
+          <span>Preparing your dashboard</span>
+        </div>
+      </div>
+
+      <div class="loader-ring"></div>
+      <div class="loading-text">Calibrating water level models…</div>
+
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+
+      <div class="hint">
+        Tip: you can search directly by <span>station name</span> once loaded.
+      </div>
+    </div>
+  </div>
+</body>
+
+<script>
+setTimeout(function(){
+window.location.href="/home";
+},3000);
+</script>
+</html>
