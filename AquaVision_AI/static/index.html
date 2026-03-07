@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AquaVision AI</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AquaVision AI – AI-powered groundwater forecasting and crop recommendation.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --primary:#4e73df;
+      --primary-dark:#2e59d9;
+      --accent:#1cc88a;
+      --accent-dark:#17a673;
+      --danger:#e74a3b;
+      --warning:#f6c23e;
+      --text-main:#111827;
+      --text-muted:#6b7280;
+      --surface:#ffffff;
+      --radius-lg:16px;
+      --radius-md:10px;
+      --shadow-lg:0 18px 45px rgba(15,23,42,0.35);
+      --shadow-sm:0 8px 18px rgba(15,23,42,0.18);
+      --transition-fast:0.18s ease-out;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      padding:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at top left,rgba(76,201,240,0.35),transparent 55%),
+        radial-gradient(circle at bottom right,rgba(56,189,248,0.5),transparent 55%),
+        linear-gradient(135deg,#020617,#0b1120);
+      color:#f9fafb;
+      font-family:"Poppins",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+
+    .page-shell{
+      width:100%;
+      padding:24px 16px;
+    }
+
+    .container{
+      max-width:1120px;
+      margin:0 auto;
+      padding:32px 26px 28px;
+      background:radial-gradient(circle at top left,rgba(148,163,184,0.14) 0,transparent 55%),
+                 radial-gradient(circle at bottom right,rgba(30,64,175,0.3) 0,transparent 60%),
+                 rgba(15,23,42,0.88);
+      border-radius:24px;
+      box-shadow:var(--shadow-lg);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(148,163,184,0.35);
+    }
+
+    .header{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:28px;
+    }
+
+    .title-group{
+      text-align:left;
+    }
+
+    .title{
+      font-size:32px;
+      font-weight:700;
+      letter-spacing:0.03em;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .title-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      background:radial-gradient(circle at 30% 20%,#e0f2fe,transparent 55%),rgba(37,99,235,0.35);
+      box-shadow:0 0 20px rgba(59,130,246,0.5);
+      font-size:20px;
+    }
+
+    .subtitle{
+      margin-top:4px;
+      font-size:14px;
+      color:#e5e7eb;
+      opacity:0.9;
+    }
+
+    .badge{
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(22,163,74,0.12);
+      color:#bbf7d0;
+      font-size:11px;
+      font-weight:500;
+      border:1px solid rgba(22,163,74,0.5);
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .badge-dot{
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 0 4px rgba(34,197,94,0.35);
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns: minmax(0,1.05fr) minmax(0,1.1fr);
+      gap:22px;
+      align-items:stretch;
+    }
+
+    @media (max-width:900px){
+      .container{
+        padding:24px 18px 22px;
+      }
+      .layout{
+        grid-template-columns:1fr;
+      }
+      .header{
+        align-items:flex-start;
+      }
+      .title{
+        font-size:26px;
+      }
+    }
+
+    .card{
+      background:linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.94));
+      border-radius:var(--radius-lg);
+      padding:20px 18px 18px;
+      box-shadow:var(--shadow-sm);
+      border:1px solid rgba(148,163,184,0.5);
+      color:#f9fafb;
+      text-align:left;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-60%;
+      opacity:0.12;
+      background:
+        radial-gradient(circle at 10% 20%,#38bdf8 0,transparent 55%),
+        radial-gradient(circle at 80% 80%,#4ade80 0,transparent 55%);
+      transform:translate3d(0,0,0);
+      pointer-events:none;
+    }
+
+    .card-content{
+      position:relative;
+      z-index:1;
+    }
+
+    .card h3{
+      margin:0 0 4px;
+      font-size:18px;
+      font-weight:600;
+      letter-spacing:0.02em;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .card h3 span{
+      font-size:18px;
+    }
+
+    .card-description{
+      margin:0 0 14px;
+      font-size:13px;
+      color:#cbd5f5;
+    }
+
+    .input-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+      align-items:center;
+    }
+
+    .input-wrapper{
+      flex:1 1 220px;
+      position:relative;
+    }
+
+    .input-label{
+      display:block;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.13em;
+      color:#9ca3af;
+      margin-bottom:4px;
+      font-weight:500;
+    }
+
+    input{
+      width:100%;
+      padding:11px 11px 11px 34px;
+      border-radius:var(--radius-md);
+      border:1px solid rgba(148,163,184,0.9);
+      font-size:14px;
+      background:rgba(15,23,42,0.7);
+      color:#f9fafb;
+      outline:none;
+      transition:border-color var(--transition-fast),box-shadow var(--transition-fast),background-color var(--transition-fast),transform 0.08s ease-out;
+    }
+
+    input::placeholder{
+      color:#6b7280;
+      font-size:13px;
+    }
+
+    input:focus{
+      border-color:#60a5fa;
+      box-shadow:0 0 0 1px rgba(59,130,246,0.8),0 0 0 6px rgba(37,99,235,0.25);
+      background:rgba(15,23,42,0.9);
+      transform:translateY(-1px);
+    }
+
+    .input-icon{
+      position:absolute;
+      left:10px;
+      top:50%;
+      transform:translateY(calc(-50% + 1px));
+      font-size:13px;
+      opacity:0.75;
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    button{
+      padding:9px 14px;
+      border:none;
+      border-radius:999px;
+      background:var(--primary);
+      color:#f9fafb;
+      font-size:13px;
+      font-weight:500;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      box-shadow:0 10px 22px rgba(37,99,235,0.4);
+      transition:background-color var(--transition-fast),transform 0.12s ease-out,box-shadow var(--transition-fast),opacity 0.12s ease-out;
+      white-space:nowrap;
+    }
+
+    button span.icon{
+      font-size:14px;
+    }
+
+    button:hover{
+      background:var(--primary-dark);
+      transform:translateY(-1px) translateZ(0);
+      box-shadow:0 16px 32px rgba(37,99,235,0.55);
+    }
+
+    button:active{
+      transform:translateY(0);
+      box-shadow:0 6px 12px rgba(37,99,235,0.4);
+    }
+
+    button:disabled{
+      cursor:default;
+      opacity:0.65;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-secondary{
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.7);
+      box-shadow:0 8px 18px rgba(15,23,42,0.8);
+    }
+
+    .btn-secondary:hover{
+      background:rgba(15,23,42,1);
+    }
+
+    .btn-soft{
+      background:rgba(37,99,235,0.12);
+      color:#bfdbfe;
+      border:1px solid rgba(129,140,248,0.7);
+      box-shadow:none;
+      font-size:12px;
+      padding:7px 11px;
+    }
+
+    .btn-soft:hover{
+      background:rgba(37,99,235,0.2);
+      transform:none;
+      box-shadow:none;
+    }
+
+    .status-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:16px;
+      align-items:flex-start;
+      font-size:13px;
+    }
+
+    .location,.station,.risk{
+      color:#e5e7eb;
+    }
+
+    .location{
+      font-weight:500;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .location span.icon{
+      font-size:15px;
+    }
+
+    .station{
+      font-size:13px;
+      color:#cbd5f5;
+    }
+
+    .risk-label{
+      opacity:0.9;
+    }
+
+    .safe{
+      color:#22c55e;
+      font-weight:600;
+    }
+
+    .warning{
+      color:var(--warning);
+      font-weight:600;
+    }
+
+    .critical{
+      color:var(--danger);
+      font-weight:600;
+    }
+
+    #crops{
+      margin-top:10px;
+      font-size:13px;
+      color:#e5e7eb;
+    }
+
+    #crops span.label{
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      font-size:11px;
+      color:#9ca3af;
+      margin-right:4px;
+    }
+
+    #crops span.value{
+      color:#e5e7eb;
+    }
+
+    .ChartCard{
+      background:var(--surface);
+      border-radius:var(--radius-lg);
+      padding:18px 16px 18px;
+      box-shadow:var(--shadow-sm);
+      color:var(--text-main);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .ChartCard::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(59,130,246,0.13) 0,transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(34,197,94,0.12) 0,transparent 55%);
+      opacity:0.9;
+      pointer-events:none;
+    }
+
+    .ChartCard-inner{
+      position:relative;
+      z-index:1;
+    }
+
+    .ChartCard-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .ChartCard-title{
+      font-size:15px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .ChartCard-title span.icon{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(37,99,235,0.1);
+      color:#1d4ed8;
+      font-size:13px;
+    }
+
+    .ChartCard-subtitle{
+      margin:0;
+      font-size:12px;
+      color:var(--text-muted);
+    }
+
+    .ChartCard-tag{
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(59,130,246,0.08);
+      color:#1d4ed8;
+      font-size:11px;
+      border:1px solid rgba(147,197,253,0.9);
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+
+    .ChartCard-footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-top:10px;
+      font-size:11px;
+      color:var(--text-muted);
+    }
+
+    .legend-dot{
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#1d4ed8,#38bdf8);
+      display:inline-block;
+      margin-right:6px;
+    }
+
+    .chart-wrapper{
+      position:relative;
+      margin-top:6px;
+      padding-top:2px;
+    }
+
+    #forecastChart{
+      max-height:260px;
+    }
+
+    @media (max-width:900px){
+      .ChartCard{
+        padding:16px 14px 16px;
+      }
+      #forecastChart{
+        max-height:230px;
+      }
+    }
+
+    .dashboard-btn{
+      margin-top:18px;
+      width:100%;
+      justify-content:center;
+      background:var(--accent);
+      border-radius:999px;
+      font-size:14px;
+      font-weight:600;
+      box-shadow:0 14px 30px rgba(16,185,129,0.5);
+    }
+
+    .dashboard-btn:hover{
+      background:var(--accent-dark);
+      box-shadow:0 18px 38px rgba(16,185,129,0.7);
+    }
+
+    .footer{
+      margin-top:22px;
+      font-size:11px;
+      color:#9ca3af;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+
+    .footer a{
+      color:#a5b4fc;
+      text-decoration:none;
+    }
+
+    .footer a:hover{
+      text-decoration:underline;
+    }
+
+    .loader{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      color:#bfdbfe;
+      margin-top:12px;
+    }
+
+    .loader-dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:#60a5fa;
+      box-shadow:0 0 0 3px rgba(37,99,235,0.4);
+      animation:pulse 1.2s ease-in-out infinite;
+    }
+
+    .loader-dot:nth-child(2){
+      animation-delay:0.15s;
+    }
+
+    .loader-dot:nth-child(3){
+      animation-delay:0.3s;
+    }
+
+    @keyframes pulse{
+      0%,100%{transform:scale(0.85);opacity:0.55;}
+      50%{transform:scale(1);opacity:1;}
+    }
+
+    .error{
+      margin-top:10px;
+      padding:8px 11px;
+      border-radius:10px;
+      background:rgba(248,113,113,0.1);
+      color:#fecaca;
+      border:1px solid rgba(248,113,113,0.5);
+      font-size:12px;
+      display:none;
+    }
+
+    /* Chatbot styles */
+    .chatbot-toggle{
+      position:fixed;
+      right:22px;
+      bottom:24px;
+      z-index:40;
+      width:52px;
+      height:52px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      color:#ecfdf5;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 16px 38px rgba(22,163,74,0.75);
+      border:none;
+      cursor:pointer;
+      transition:transform 0.16s ease-out,box-shadow 0.16s ease-out,background 0.16s ease-out,opacity 0.12s ease-out;
+    }
+
+    .chatbot-toggle span.icon{
+      font-size:24px;
+    }
+
+    .chatbot-toggle:hover{
+      transform:translateY(-2px);
+      box-shadow:0 20px 46px rgba(22,163,74,0.9);
+      background:linear-gradient(135deg,#4ade80,#16a34a);
+    }
+
+    .chatbot-toggle:active{
+      transform:translateY(0);
+      box-shadow:0 10px 24px rgba(22,163,74,0.85);
+    }
+
+    .chatbot-panel{
+      position:fixed;
+      right:22px;
+      bottom:88px;
+      width:320px;
+      max-height:420px;
+      background:rgba(15,23,42,0.98);
+      border-radius:18px;
+      box-shadow:0 24px 70px rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.6);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      z-index:50;
+      transform-origin:bottom right;
+      transform:scale(0.96) translateY(12px);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 0.16s ease-out,transform 0.16s ease-out;
+    }
+
+    .chatbot-panel.open{
+      opacity:1;
+      pointer-events:auto;
+      transform:scale(1) translateY(0);
+    }
+
+    @media (max-width:600px){
+      .chatbot-panel{
+        right:12px;
+        left:12px;
+        width:auto;
+        bottom:82px;
+      }
+      .chatbot-toggle{
+        right:16px;
+        bottom:16px;
+      }
+    }
+
+    .chatbot-header{
+      padding:10px 12px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(30,64,175,0.7);
+      background:radial-gradient(circle at top left,rgba(56,189,248,0.2),transparent 55%),rgba(15,23,42,0.98);
+    }
+
+    .chatbot-header-main{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .chatbot-avatar{
+      width:26px;
+      height:26px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:radial-gradient(circle at 30% 20%,#e0f2fe,transparent 55%),rgba(30,64,175,0.75);
+      font-size:15px;
+      box-shadow:0 0 0 3px rgba(37,99,235,0.5);
+    }
+
+    .chatbot-title-text{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .chatbot-title{
+      font-size:13px;
+      font-weight:600;
+      color:#e5e7eb;
+    }
+
+    .chatbot-subtitle{
+      font-size:11px;
+      color:#cbd5f5;
+    }
+
+    .chatbot-badge{
+      font-size:10px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(22,163,74,0.18);
+      color:#bbf7d0;
+      border:1px solid rgba(34,197,94,0.6);
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+
+    .chatbot-messages{
+      flex:1;
+      padding:10px 10px 8px;
+      overflow-y:auto;
+      background:radial-gradient(circle at 0 0,rgba(30,64,175,0.55),transparent 58%),rgba(15,23,42,0.96);
+    }
+
+    .chatbot-message{
+      max-width:88%;
+      margin-bottom:8px;
+      display:flex;
+    }
+
+    .chatbot-message.bot{
+      justify-content:flex-start;
+    }
+
+    .chatbot-message.user{
+      justify-content:flex-end;
+    }
+
+    .chatbot-bubble{
+      padding:7px 9px;
+      border-radius:12px;
+      font-size:12px;
+      line-height:1.4;
+      position:relative;
+      word-break:break-word;
+    }
+
+    .chatbot-message.bot .chatbot-bubble{
+      background:rgba(30,64,175,0.95);
+      color:#e5e7eb;
+      border-bottom-left-radius:4px;
+    }
+
+    .chatbot-message.user .chatbot-bubble{
+      background:#16a34a;
+      color:#ecfdf5;
+      border-bottom-right-radius:4px;
+    }
+
+    .chatbot-message-meta{
+      font-size:10px;
+      color:#9ca3af;
+      margin-top:2px;
+    }
+
+    .chatbot-input-row{
+      padding:7px 8px;
+      border-top:1px solid rgba(30,64,175,0.7);
+      background:rgba(15,23,42,0.98);
+      display:flex;
+      align-items:flex-end;
+      gap:6px;
+    }
+
+    .chatbot-input{
+      flex:1;
+      min-height:30px;
+      max-height:64px;
+      padding:6px 8px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.8);
+      background:rgba(15,23,42,0.9);
+      color:#e5e7eb;
+      font-size:12px;
+      resize:none;
+      outline:none;
+    }
+
+    .chatbot-input::placeholder{
+      color:#6b7280;
+    }
+
+    .chatbot-send-btn{
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      background:#22c55e;
+      border:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      color:#ecfdf5;
+      font-size:16px;
+      box-shadow:0 8px 18px rgba(22,163,74,0.7);
+      flex-shrink:0;
+    }
+
+    .chatbot-send-btn:disabled{
+      opacity:0.6;
+      box-shadow:none;
+      cursor:default;
+    }
+
+    .chatbot-suggested{
+      display:flex;
+      flex-wrap:wrap;
+      gap:4px;
+      padding:0 10px 4px;
+      border-top:1px dashed rgba(148,163,184,0.5);
+      background:rgba(15,23,42,0.97);
+    }
+
+    .chatbot-suggested button{
+      padding:3px 7px;
+      font-size:10px;
+      border-radius:999px;
+      background:rgba(37,99,235,0.18);
+      border:1px solid rgba(129,140,248,0.7);
+      color:#c7d2fe;
+      box-shadow:none;
+    }
+
+    .chatbot-suggested button:hover{
+      background:rgba(37,99,235,0.3);
+      transform:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-shell">
+    <div class="container">
+      <div class="header">
+        <div class="title-group">
+          <div class="title">
+            <span class="title-icon">🌊</span>
+            <span>AquaVision AI</span>
+          </div>
+          <div class="subtitle">
+            AI-powered groundwater forecasting &amp; crop recommendation, tailored to your location.
+          </div>
+        </div>
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Real-time insights
+        </div>
+      </div>
+
+      <div class="layout">
+        <!-- Left: Controls & Status -->
+        <div class="card">
+          <div class="card-content">
+            <h3>
+              <span>📡</span>
+              <span>Check Groundwater Forecast</span>
+            </h3>
+            <p class="card-description">
+              Search by station name or use your current location to see the 6‑month water level forecast and crop suggestions.
+            </p>
+
+            <div class="input-row">
+              <div class="input-wrapper">
+                <label class="input-label" for="stationInput">Station name</label>
+                <span class="input-icon">📍</span>
+                <input
+                  id="stationInput"
+                  placeholder="e.g. 22GB CHAK, 6 PB"
+                  autocomplete="off"
+                >
+              </div>
+
+              <div class="btn-row">
+                <button id="predictBtn" type="button" onclick="manualPredict()">
+                  <span class="icon">🤖</span>
+                  <span>Predict</span>
+                </button>
+                <button id="locationBtn" class="btn-secondary" type="button" onclick="useLocation()">
+                  <span class="icon">📌</span>
+                  <span>Use my location</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="errorBox" class="error"></div>
+
+            <div id="loader" class="loader" style="display:none;">
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+              <span>Analyzing conditions…</span>
+            </div>
+
+            <div class="status-row">
+              <div class="location" id="locationText">
+                <!-- Filled dynamically -->
+              </div>
+              <div class="station" id="stationName">
+                <!-- Filled dynamically -->
+              </div>
+              <div class="risk" id="riskLevel">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+
+            <div id="crops">
+              <!-- Recommended crops -->
+            </div>
+
+            <button
+              class="dashboard-btn"
+              type="button"
+              onclick="window.location.href='/static/visualization.html'"
+            >
+              <span class="icon">📊</span>
+              <span>Open Data Visualization Dashboard</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Chart -->
+        <div class="ChartCard">
+          <div class="ChartCard-inner">
+            <div class="ChartCard-header">
+              <div>
+                <div class="ChartCard-title">
+                  <span class="icon">📈</span>
+                  <span>6‑Month Water Level Forecast</span>
+                </div>
+                <p class="ChartCard-subtitle">
+                  Trend projection for your nearest groundwater monitoring station.
+                </p>
+              </div>
+              <div class="ChartCard-tag">
+                <span class="legend-dot"></span>
+                <span>Forecast series</span>
+              </div>
+            </div>
+
+            <div class="chart-wrapper">
+              <canvas id="forecastChart" aria-label="Water level forecast chart" role="img"></canvas>
+            </div>
+
+            <div class="ChartCard-footer">
+              <span>Values shown per month (M1–M6)</span>
+              <span>Updated when you run a prediction</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Powered by AquaVision AI</span>
+        <span>Forecasts are indicative and should be used alongside local expertise.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot -->
+  <button class="chatbot-toggle" id="chatbotToggle" type="button" aria-label="Open AquaVision assistant">
+    <span class="icon">💬</span>
+  </button>
+
+  <div class="chatbot-panel" id="chatbotPanel" aria-label="AquaVision assistant chat" role="dialog" aria-modal="false">
+    <div class="chatbot-header">
+      <div class="chatbot-header-main">
+        <div class="chatbot-avatar">🤖</div>
+        <div class="chatbot-title-text">
+          <span class="chatbot-title">Aqua Assistant</span>
+          <span class="chatbot-subtitle">Ask about water levels &amp; crops</span>
+        </div>
+      </div>
+      <span class="chatbot-badge">Helper</span>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages"></div>
+    <div class="chatbot-suggested" id="chatbotSuggested">
+      <button type="button" data-question="How do I choose crops from this forecast?">Crop advice from forecast</button>
+      <button type="button" data-question="What does Warning risk level mean?">Meaning of risk levels</button>
+      <button type="button" data-question="How accurate is this forecast?">Forecast accuracy</button>
+    </div>
+    <div class="chatbot-input-row">
+      <textarea
+        id="chatbotInput"
+        class="chatbot-input"
+        rows="1"
+        placeholder="Ask a question about groundwater or crops..."
+      ></textarea>
+      <button id="chatbotSend" class="chatbot-send-btn" type="button">➤</button>
+    </div>
+  </div>
+
+  <script>
+    let chart;
+    let chatbotIsOpen = false;
+
+    function setLoading(isLoading){
+      const loader = document.getElementById("loader");
+      const predictBtn = document.getElementById("predictBtn");
+      const locationBtn = document.getElementById("locationBtn");
+
+      loader.style.display = isLoading ? "inline-flex" : "none";
+      predictBtn.disabled = isLoading;
+      locationBtn.disabled = isLoading;
+    }
+
+    function showError(message){
+  const box = document.getElementById("errorBox");
+
+  if(!message){
+    box.style.display = "none";
+    box.textContent = "";
+    return;
+  }
+
+  box.textContent = message;
+  box.style.display = "block";
+}
+
+    function drawChart(data){
+      const ctx = document.getElementById("forecastChart");
+
+      if(chart){
+        chart.destroy();
+      }
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["M1","M2","M3","M4","M5","M6"],
+          datasets: [{
+            label: "Water Level Forecast",
+            data: data,
+            borderWidth: 3,
+            borderColor: "rgba(37,99,235,1)",
+            backgroundColor: "rgba(59,130,246,0.15)",
+            tension: 0.35,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            pointBackgroundColor: "#1d4ed8",
+            pointBorderColor: "#e5e7eb",
+            pointBorderWidth: 1.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: "#6b7280",
+                font: {
+                  size: 11
+                }
+              }
+            },
+            y: {
+              grid: {
+                color: "rgba(148,163,184,0.25)",
+                drawBorder: false
+              },
+              ticks: {
+                color: "#6b7280",
+                font: {
+                  size: 11
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: "#020617",
+              titleColor: "#e5e7eb",
+              bodyColor: "#e5e7eb",
+              borderColor: "rgba(148,163,184,0.8)",
+              borderWidth: 1,
+              padding: 9,
+              displayColors: false
+            }
+          }
+        }
+      });
+    }
+
+    async function manualPredict(){
+      const stationInput = document.getElementById("stationInput");
+      const station = stationInput.value.trim();
+
+      showError("");
+
+      if(!station){
+        showError("Please enter a station name before forecasting.");
+        stationInput.focus();
+        return;
+      }
+
+      try{
+        setLoading(true);
+        const res = await fetch("/predict6/" + encodeURIComponent(station), {
+          method: "POST"
+        });
+
+        if(!res.ok){
+          throw new Error("Unable to fetch forecast. Please check the station name or try again.");
+        }
+
+        const data = await res.json();
+        updateUI(data);
+      }catch(err){
+        console.error(err);
+        showError(err.message || "Something went wrong while fetching the forecast.");
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    function useLocation(){
+      showError("");
+
+      if(!navigator.geolocation){
+        showError("Geolocation is not supported by this browser.");
+        return;
+      }
+
+      setLoading(true);
+
+      navigator.geolocation.getCurrentPosition(async function(position){
+        try{
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          document.getElementById("locationText").innerHTML =
+            '<span class="icon">📍</span><span>Using your location</span>';
+
+          const res = await fetch("/predict_by_location", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              latitude: lat,
+              longitude: lon
+            })
+          });
+
+          if(!res.ok){
+            throw new Error("Unable to fetch forecast for your location. Please try again.");
+          }
+
+          const data = await res.json();
+          updateUI(data);
+        }catch(err){
+          console.error(err);
+          showError(err.message || "Something went wrong while fetching the forecast.");
+        }finally{
+          setLoading(false);
+        }
+      }, function(error){
+        setLoading(false);
+        if(error.code === error.PERMISSION_DENIED){
+          showError("Location access was denied. You can still search by station name.");
+        }else{
+          showError("Unable to access your location. Please try again or search by station name.");
+        }
+      });
+    }
+
+    function updateUI(data){
+      if(!data){
+        showError("No data returned from server.");
+        return;
+      }
+
+      // Station
+      if(data.station){
+        document.getElementById("stationName").innerText =
+          "Nearest station: " + data.station;
+      }
+
+      // Chart
+      if(Array.isArray(data.forecast)){
+        drawChart(data.forecast);
+      }
+
+      // Risk
+      const risk = data.risk_level || "Safe";
+      let riskClass = "safe";
+
+      if(risk === "Warning") riskClass = "warning";
+      if(risk === "Critical") riskClass = "critical";
+
+      document.getElementById("riskLevel").innerHTML =
+        '<span class="risk-label">Risk level: </span>' +
+        '<span class="' + riskClass + '">' + risk + "</span>";
+
+      // Crops
+      const cropsEl = document.getElementById("crops");
+      if(Array.isArray(data.recommended_crops) && data.recommended_crops.length){
+        cropsEl.innerHTML =
+          '<span class="label">Recommended crops</span>' +
+          '<span class="value">' + data.recommended_crops.join(", ") + "</span>";
+      }else{
+        cropsEl.innerHTML =
+          '<span class="label">Recommended crops</span>' +
+          '<span class="value">No recommendations available for this forecast.</span>';
+      }
+    }
+
+    // Allow Enter key to trigger manualPredict
+    document.getElementById("stationInput").addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        manualPredict();
+      }
+    });
+
+    // --- Simple in-page Aqua Assistant chatbot ---
+    const chatbotToggle = document.getElementById("chatbotToggle");
+    const chatbotPanel = document.getElementById("chatbotPanel");
+    const chatbotMessages = document.getElementById("chatbotMessages");
+    const chatbotInput = document.getElementById("chatbotInput");
+    const chatbotSend = document.getElementById("chatbotSend");
+    const chatbotSuggested = document.getElementById("chatbotSuggested");
+
+    function appendMessage(text, from = "bot"){
+      if(!text) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "chatbot-message " + (from === "user" ? "user" : "bot");
+
+      const bubble = document.createElement("div");
+      bubble.className = "chatbot-bubble";
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+
+      chatbotMessages.appendChild(wrapper);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    function getCurrentContextSummary(){
+      const station = document.getElementById("stationName").innerText || "";
+      const risk = document.getElementById("riskLevel").innerText || "";
+      const crops = document.getElementById("crops").innerText || "";
+
+      let summary = "";
+      if(station){
+        summary += station + ". ";
+      }
+      if(risk){
+        summary += risk + ". ";
+      }
+      if(crops){
+        summary += crops + ".";
+      }
+      return summary.trim();
+    }
+
+    function generateBotReply(questionRaw){
+      const question = (questionRaw || "").toLowerCase();
+      const context = getCurrentContextSummary();
+
+      if(!question){
+        return "You can ask me about the forecast, risk levels, or which crops might be suitable.";
+      }
+
+      if(question.includes("hello") || question.includes("hi") || question.includes("namaste")){
+        return "Hello! I am your Aqua Assistant. Ask me about groundwater forecasts, risk levels, or crop choices based on the prediction.";
+      }
+
+      if(question.includes("risk") || question.includes("warning") || question.includes("critical") || question.includes("safe")){
+        return "Risk levels summarize how favourable the groundwater situation is:\n\n" +
+          "• Safe – water levels are generally comfortable for normal irrigation.\n" +
+          "• Warning – levels may decline or be stressed; consider water‑efficient crops and careful irrigation.\n" +
+          "• Critical – high stress on groundwater; prefer very low water‑use crops and protect drinking water needs first.\n\n" +
+          (context ? "Right now your current forecast details are: " + context : "Run a forecast so I can relate this to your station.");
+      }
+
+      if(question.includes("crop") || question.includes("crops") || question.includes("which crop") || question.includes("what should i grow")){
+        return (context ? "Based on the current forecast and recommendations: " + context :
+          "First run a forecast using a station or your location. Then I will summarize the recommended crops and how they relate to risk levels.") +
+          "\n\nIn general, lower groundwater levels or higher risk favour short‑duration and drought‑tolerant crops, while higher, stable levels allow more water‑intensive crops.";
+      }
+
+      if(question.includes("accurate") || question.includes("accuracy") || question.includes("reliable")){
+        return "These forecasts are model‑based estimates using historical groundwater data. They capture trends but cannot guarantee exact water levels.\n\n" +
+          "Use them as decision support along with local experience, recent rainfall, and advice from local agronomy experts and extension officers.";
+      }
+
+      if(question.includes("how to use") || question.includes("help") || question.includes("guide")){
+        return "1) Enter a station name or use your location.\n" +
+          "2) Check the 6‑month forecast trend and the risk level.\n" +
+          "3) Look at the recommended crops and adjust choices based on water availability, risk level, and local guidance.\n\n" +
+          "You can ask me about any of these steps.";
+      }
+
+      return "I may not fully understand this question, but here is what I can help with:\n" +
+        "• Explain what the risk levels mean.\n" +
+        "• Interpret the 6‑month water level trend.\n" +
+        "• Discuss how to think about crop choices under different water conditions.\n\n" +
+        (context ? "Current forecast context: " + context : "Try running a forecast so I can relate my answer to your station.");
+    }
+
+    function handleChatSubmit(){
+      const text = chatbotInput.value.trim();
+      if(!text){
+        chatbotInput.focus();
+        return;
+      }
+      appendMessage(text, "user");
+      chatbotInput.value = "";
+
+      setTimeout(() => {
+        const reply = generateBotReply(text);
+        appendMessage(reply, "bot");
+      }, 150);
+    }
+
+    chatbotToggle.addEventListener("click", () => {
+      chatbotIsOpen = !chatbotIsOpen;
+      if(chatbotIsOpen){
+        chatbotPanel.classList.add("open");
+        chatbotInput.focus();
+        if(!chatbotMessages.dataset.initialized){
+          appendMessage("Hi, I am Aqua Assistant. Ask me anything about your groundwater forecast, risk levels, or which crops might suit your conditions.");
+          chatbotMessages.dataset.initialized = "true";
+        }
+      }else{
+        chatbotPanel.classList.remove("open");
+      }
+    });
+
+    chatbotSend.addEventListener("click", handleChatSubmit);
+
+    chatbotInput.addEventListener("keydown", (e) => {
+      if(e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        handleChatSubmit();
+      }
+    });
+
+    chatbotSuggested.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-question]");
+      if(!btn) return;
+      const q = btn.getAttribute("data-question") || "";
+      appendMessage(q, "user");
+      const reply = generateBotReply(q);
+      setTimeout(() => appendMessage(reply, "bot"), 120);
+    });
+  </script>
+</body>
+</html>
